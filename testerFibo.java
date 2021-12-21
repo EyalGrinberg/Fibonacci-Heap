@@ -6,7 +6,7 @@ public class testerFibo {
 
 	public static void main(String[] args) {
 		Random HeapGen = new Random();
-		int n =20;
+		int n =25;
 		List<Integer> orderOfInsertions = new ArrayList<Integer>();
 		List<Integer> orderOfInsertions2 = new ArrayList<Integer>();
 		int [] bank= new int[3*n+1];
@@ -32,15 +32,19 @@ public class testerFibo {
 		System.out.println("*******************After deletion in first heap***************");
 		myHeap.deleteMin();
 		myHeap.auxFuncNew();
+		System.out.println("Tree size is " + myHeap.size());
 		System.out.println("*************After deletion in second heap******************");
 		heap2.deleteMin();
 		heap2.auxFuncNew();
+		System.out.println("Tree size is " + heap2.size());
 		System.out.println("***************After meld*******************");
 		myHeap.meld(heap2);
 		myHeap.auxFuncNew();
+		System.out.println("Tree size is " + myHeap.size());
 		System.out.println("******************Melded after deletion*****************");
 		myHeap.deleteMin();
 		myHeap.auxFuncNew();
+		System.out.println("Tree size is " + myHeap.size());
 		System.out.println("*************Melded after 3 insertions**************");
 		int key = getRandom(HeapGen, bank);
 		myHeap.insert(key);
@@ -52,6 +56,7 @@ public class testerFibo {
 		myHeap.insert(key);
 		System.out.println("Inserted " + key);
 		myHeap.auxFuncNew();
+		System.out.println("Tree size is " + myHeap.size());
 		System.out.println("*************Melded after 7 deletions**************");
 		myHeap.deleteMin();
 		myHeap.deleteMin();
@@ -61,6 +66,7 @@ public class testerFibo {
 		myHeap.deleteMin();
 		myHeap.deleteMin();
 		myHeap.auxFuncNew();
+		System.out.println("Tree size is " + myHeap.size());
 		}
 	
 	

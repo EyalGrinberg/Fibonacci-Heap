@@ -246,7 +246,6 @@ public class FibonacciHeap
     	 if (this.min.getKey()>heap2.min.getKey()) {
     		 this.min = heap2.min; //update min
     	 }
-    	 this.size = this.size + heap2.size;
     	 
     }
 
