@@ -1,16 +1,61 @@
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+//import FibonacciHeap.HeapNode;
+
 public class testerFibo {
 
 	public static void main(String[] args) {
 		//testInsertMeldDelete();
-		testDecreaseCutDelete();
+		//testDecreaseCutDelete();
 		//testKMin();
+		theoryTester();
 		}
-	
+	public static void theoryTester() {
+		long startTime = System.nanoTime();
+		int k = 10;
+		int m = (int) Math.pow(2, k);
+		FibonacciHeap myHeap = new FibonacciHeap();
+		int sum = 1;
+		List<FibonacciHeap.HeapNode> pointerList = new ArrayList<FibonacciHeap.HeapNode>();
+		List<Integer> impKeys = new ArrayList();
+		List<FibonacciHeap.HeapNode> oneKey = new ArrayList();
+		impKeys.add(sum);
+		for (int i=1; i<k; i++) {
+			sum += Math.pow(2, k-i);
+			impKeys.add(sum);	
+		}
+		for (int i=m-1; i>-2; i--) {
+			myHeap.insert(i);
+			if (impKeys.contains(i)) {
+				pointerList.add(myHeap.exLeft);
+			}
+			if (i==m-2) {
+				oneKey.add(myHeap.exLeft);
+			}
+		}
+		myHeap.deleteMin();
+		System.out.println("****After first deleteMin*****");
+		myHeap.auxFuncNew();
+		System.out.println("****After decreaseKey loop*****");
+		for (int j=k; j>0; j--) {
+			myHeap.decreaseKey(pointerList.get(j-1), m+1);
+		}
+		//myHeap.decreaseKey(oneKey.get(0), m+1);
+		myHeap.auxFuncNew();
+		long endTime   = System.nanoTime();
+		long totalTime = endTime - startTime;
+		totalTime=totalTime/1000000;
+		System.out.println("Total run time is: " + totalTime);
+		System.out.println("Total links is: " + FibonacciHeap.totalLinks());
+		System.out.println("Total cuts is: " + FibonacciHeap.totalCuts());
+		System.out.println("Potential is: " + myHeap.potential());
+		System.out.println("Number of trees: " + myHeap.trees);
+		System.out.println("Marked nodes: " + myHeap.marked);
+	}
 	public static void testKMin() {  
 		Random HeapGen = new Random();
 		int n = 129;
