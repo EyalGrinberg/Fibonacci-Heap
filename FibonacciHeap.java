@@ -12,10 +12,10 @@ import java.util.List;
 public class FibonacciHeap
 {
 	private HeapNode min;
-	public HeapNode exLeft; ///change to private before admission!!!!!!!!!!!!!!!!!
-	public List<HeapNode> root_lst;
-	public int marked;
-	public int trees;
+	private HeapNode exLeft; 
+	private List<HeapNode> root_lst;
+	private int marked;
+	private int trees;
 	private static int totalLinks;
 	private static int totalCuts;
 	private int size;
@@ -105,19 +105,41 @@ public class FibonacciHeap
     		this.exLeft = null;
     		return;
     	}
-    	if ((this.min.getPrev()==this.min)) {//single tree heap
+    	if ((this.min.getPrev()==this.min)) {
+    		if (this.min.getChild()!=null) { //has children 
+        		HeapNode traveler = this.min.getChild(); //unmark the children
+        		int end = traveler.getKey();
+        		if (traveler.mark) { //unmark and update field
+    				traveler.mark = false;
+    				traveler.setParent(null);//added last
+    				this.marked -=1;
+    			}
+        		traveler.setParent(null);
+        		traveler = traveler.getNext();
+        		while (traveler.getKey()!= end) { //unmark all and update field
+        			traveler.setParent(null);
+        			if (traveler.mark) {
+        				traveler.mark = false;
+        				this.marked -=1;
+
+        			}
+        			traveler = traveler.getNext();
+        		}// unmarking done
+    		}
     		this.exLeft = this.min.getChild();
     		this.min.getChild().setParent(null);
     		this.min.setChild(null);
     		this.consolidate();
     		this.size-=1;
     		return;
+    		
     	}
     	if (this.min.getChild()!=null) { //has children 
     		HeapNode traveler = this.min.getChild(); //unmark the children
     		int end = traveler.getKey();
     		if (traveler.mark) { //unmark and update field
 				traveler.mark = false;
+				traveler.setParent(null);//added last
 				this.marked -=1;
 			}
     		traveler = traveler.getNext();
@@ -125,6 +147,7 @@ public class FibonacciHeap
     			if (traveler.mark) {
     				traveler.mark = false;
     				this.marked -=1;
+
     			}
     			traveler = traveler.getNext();
     		}// unmarking done
@@ -162,22 +185,21 @@ public class FibonacciHeap
     		this.min.setNext(null);// disconnect from heap
     		this.min.setPrev(null);
     	}
-    	
-    	for (int i=0; i<=Math.log(root_lst.size())+3; i++) {//update exLeft incase exLeft was deleted
+    	for (int i=0; i<root_lst.size(); i++) {//update exLeft incase exLeft was deleted
     		if ((root_lst.get(i).getKey()!=Integer.MIN_VALUE)&&(root_lst.get(i).getKey()!=this.min.getKey())) { //connect exLeft with other roots and end
     			this.exLeft = root_lst.get(i);
     			break;
     		}
-    		
     	}
      	this.consolidate();
      	this.size -=1;
     }
+    
      	
     
     
     private void consolidate() { //O(logn) amortized. O(n) worst case.
-    	for (int i=0; i<=Math.log(root_lst.size())+3; i++) {//insert roots into auxiliary list
+    	for (int i=0; i<root_lst.size(); i++) {//insert roots into auxiliary list
     		if (root_lst.get(i).getKey()!=Integer.MIN_VALUE) {
     			HeapNode dumby = new HeapNode(Integer.MIN_VALUE);
     			root_lst.set(i, dumby);
@@ -188,6 +210,7 @@ public class FibonacciHeap
     	if ((tmp.getNext()==tmp) || (tmp.getPrev()==tmp)){ //one tree heap
      		this.min = tmp; //update min and finish
      		this.root_lst.set(rank, tmp);
+     		this.trees = 1;
      		return;
      	}
     	HeapNode stopper = this.exLeft;
@@ -211,7 +234,7 @@ public class FibonacciHeap
     			rank = tmp.getRank();
     		}
     	}
-    	for (int i=0; i<2*Math.ceil(Math.log(this.size)); i++){
+    	for (int i=0; i<this.root_lst.size(); i++){
     		if ((this.root_lst.get(i).getKey()<this.min.getKey())&&((this.root_lst.get(i).getKey()!=Integer.MIN_VALUE))) {
     			this.min = this.root_lst.get(i); //update min pointer
     		}
@@ -222,7 +245,7 @@ public class FibonacciHeap
     	}
     	this.exLeft = this.root_lst.get(j); //lowest ranked tree is exLeft
     	tmp = this.exLeft;
-    	for(int k = j; k<=Math.ceil(2*Math.log(this.size())+1); k++) { //connecting roots
+    	for(int k = j; k<this.root_lst.size(); k++) { //connecting roots
     		if (this.root_lst.get(k).getKey() != Integer.MIN_VALUE) {
     			tmp.setNext(this.root_lst.get(k));
     			this.root_lst.get(k).setPrev(tmp);
@@ -240,7 +263,13 @@ public class FibonacciHeap
     		}
     		tmp = tmp.getNext();
     	}
-    	this.countersRep();//updates number of trees in O(logn)
+    	int cnt = 0;
+    	for (int i=0; i<this.root_lst.size(); i++) {
+    		if (this.root_lst.get(i).getKey()!=Integer.MIN_VALUE) {
+    			cnt+=1;
+    		}
+    	}
+    	this.trees = cnt;
     }
     
     
@@ -302,9 +331,9 @@ public class FibonacciHeap
     * Note: The size of of the array depends on the maximum order of a tree, and an empty heap returns an empty array.
     * 
     */
-    public int[] countersRep() //O(logn)
+    public int[] countersRep() //O(logn) amortized. O(n) worst case
     {
-    	int[] arr = new int[(int) (3*Math.ceil(Math.log(this.size())))];
+    	int[] arr = new int[this.size()];
     	int stopper = this.exLeft.getKey();
     	HeapNode tmp = this.exLeft;
     	int cntTrees = 0;
@@ -337,7 +366,7 @@ public class FibonacciHeap
 	* It is assumed that x indeed belongs to the heap.
     *
     */
-    public void delete(HeapNode x) 
+    public void delete(HeapNode x) //O(log(n)
     {   
     	int delta = Integer.MIN_VALUE;
     	this.decreaseKey(x, delta);
@@ -356,7 +385,7 @@ public class FibonacciHeap
     * Decreases the key of the node x by a non-negative value delta. The structure of the heap should be updated
     * to reflect this change (for example, the cascading cuts procedure should be applied if needed).
     */
-    public void decreaseKey(HeapNode x, int delta)
+    public void decreaseKey(HeapNode x, int delta) // Worst case O(log(n). amortized O(1)
     {    
     	x.key -= delta;
     	if (x.getKey()<this.min.getKey()) { //update min
@@ -372,7 +401,7 @@ public class FibonacciHeap
     	return; 
     }
     
-    public void cascadeCut(HeapNode son) {
+    public void cascadeCut(HeapNode son) {// Worst case O(log(n). amortized O(1)
     	if (son.getKey()==son.getParent().getChild().getKey()) { //son is parent's actual child -----> switch the child
     		if (son.getNext().getKey() == son.getKey()) { //only child	
     			son.getParent().setChild(null);
@@ -420,7 +449,7 @@ public class FibonacciHeap
     * In words: The potential equals to the number of trees in the heap
     * plus twice the number of marked nodes in the heap. 
     */
-    public int potential() 
+    public int potential() //O(1)
     {    
     	int result = 2*this.marked + this.trees;
     	return result; // should be replaced by student code
@@ -436,7 +465,7 @@ public class FibonacciHeap
     */
     public static int totalLinks()
     {   
-    	return totalLinks; // should be replaced by student code
+    	return totalLinks;
     }
 
    /**
@@ -448,7 +477,7 @@ public class FibonacciHeap
     */
     public static int totalCuts()
     {    
-    	return totalCuts; // should be replaced by student code
+    	return totalCuts; 
     }
 
      /**
@@ -459,7 +488,7 @@ public class FibonacciHeap
     *  
     * ###CRITICAL### : you are NOT allowed to change H. 
     */
-    public static int[] kMin(FibonacciHeap H, int k)
+    public static int[] kMin(FibonacciHeap H, int k) //O(k*log(n)) - degH=log(n)
     {    
     	int[] arr = new int[k];
     	if (k==1) { //one node tree. protect from zero in index stopping condition
@@ -497,69 +526,7 @@ public class FibonacciHeap
         return arr; // should be replaced by student code
     }
     
-    //********************************tester functions********************************
-    public void printToTestInitialInsertions(List<Integer> orderList) {
-    	System.out.println("Checking everyone was inserted and connected");
-    	HeapNode tmp = this.exLeft;
-    	HeapNode stopper = this.exLeft;
-    	List<Integer> output = new ArrayList<Integer>();
-    	while (tmp.getNext()!=stopper) {
-    		output.add(tmp.getKey());
-    		tmp = tmp.getNext();
-    	}
-    	output.add(tmp.getKey());
-    	System.out.println(output);
-    	Collections.reverse(output);
-    	System.out.println("Insertion Order");
-    	System.out.println(output);
-    	if (output.equals(orderList)) {
-    		System.out.println("Correct! output is equal to reversed insertion order and connected properly");
-    	}else {
-    		System.out.println("problem in initial insertions");
-    	}
-    }
-    
-    public void auxFuncNew() {
-    	boolean[] checkList = new boolean[5*this.size()];
-    	boolean[] negCheckList = new boolean[5*this.size()];
-    	this.exLeft.heapTravel(exLeft.getKey(), checkList, negCheckList, 0);
-    	int sum = 0;
-    	for (int i=0; i<=2*Math.log(checkList.length); i++) {
-    		if (this.root_lst.get(i).getKey()!=Integer.MIN_VALUE) {
-    			sum += Math.pow(2, i);
-    		}
-    	}
-    	System.out.println("Total keys printed ---> " + sum );
-    }
-    
-    /*public void display() {
-        display(this.min);
-        System.out.println();
-    }
 
-    private void display(HeapNode c) {
-        System.out.print("(");
-        if (c == null) {
-            System.out.print(")");
-            return;
-        } else {
-            HeapNode temp = c;
-            do {
-                if (c.parent == null){
-                    System.out.print("|root|");
-                }
-                System.out.print(temp.getKey());
-                HeapNode k = temp.getChild();
-                display(k);
-                System.out.print("->");
-                temp = temp.getNext();
-            } while (temp != c);
-            System.out.print(")");
-        }
-    }*/
-    
- 
-    //***********************************************End of testing functions*************************
     
    /**
     * public class HeapNode
@@ -570,8 +537,8 @@ public class FibonacciHeap
     */
     public static class HeapNode{
 
-    	public int key;
-    	public String info;
+    	private int key;
+    	private String info;
     	private boolean mark;
     	private int rank;
     	private HeapNode child;
@@ -673,116 +640,7 @@ public class FibonacciHeap
     			toJoin.setNext(saveNextRoot);
     		}
     	}
-    	//*******************for testing*****************************
-    	public void printToTestAfterManipulations(int finStopper) {
-    	    System.out.print("key is " + this.getKey() + " rank is " + this.getRank());
-    	    if (this.parent==null) {
-    	    	if (this.getChild()!=null) {
-    	    		System.out.println("");
-    	    		this.getChild().printToTestAfterManipulations(finStopper);
-    	    	}else if (this.getNext()!=this) {
-    	    		System.out.println(" ----> specefic tree done!");
-    	    		this.getNext().printToTestAfterManipulations(finStopper);
-    	    	}
-    	    }//else {
-    	    	HeapNode stopper = this;
-    	    	HeapNode tmp = this;
-    	    	tmp = tmp.getNext();
-    	    	while (tmp!=stopper) {
-    	    		 System.out.print(" -----> key is " + tmp.getKey() + " rank is " + tmp.getRank());
-    	    		 tmp = tmp.getNext();
-    	    	}
-    	    	System.out.println("");
-    	    	if ((this.getChild()==null)&&(this.getNext()==this)) {
-    	    		tmp = this.getParent();
-    	    		while (tmp.getParent()!=null) {
-    	    			tmp = tmp.getParent();
-    	    		}
-    	    		System.out.println("specefic tree done!");
-    	    		if (tmp.getNext().getKey()==finStopper) {
-    	    			System.out.println(" ----->specefic tree done!");
-    	    			return;
-    	    		}else {
-    	    			tmp = tmp.getNext();
-    	    			tmp.printToTestAfterManipulations(finStopper);
-    	    		}
-    	    	}else {
-    	    		tmp = this.getChild();
-    	    		tmp.printToTestAfterManipulations(finStopper);
-    	    	}
-    	    	
-    	    //}
-    	    	
-    	 }
-    	public void heapTravel(int finStopper, boolean[] checkList, boolean[] negCheckList, int cnt) { ///**** add before printing - connections,ranks, minHeap
-    		if ((this.getChild()==null)&&(this.getNext().getKey()==finStopper)) {
-    			if ((this.getKey()>=0)&&(checkList[this.getKey()])) { // first condition added last for theory
-    				return;
-    			}
-    			if ((this.getKey()<0)&&(negCheckList[-this.getKey()])) { // first condition added last for theory
-    				return;
-    			}
-    			//System.out.println(" key is " + this.getKey() + " rank is " + this.getRank());
-    			cnt+=1;
-    			if ((this.getChild()!=null)&&(this.getChild().getParent()!=this)) {
-    				System.out.println("child " + this.getChild().getKey() + "not connected to parent " + this.getKey());
-    			}
-    			if ((this.getNext().getPrev()!=this)) {
-    				System.out.println("brother " + this.getNext().getKey() + "not connected to brother " + this.getKey());
-    			}
-    			if ((this.getChild()!=null)&&(this.getChild().getKey()<this.getKey())) {
-    				System.out.println("child " + this.getChild().getKey() + "is smaller than " + this.getKey());
-    			}
-    			if (this.getKey()>=0) { // added for theory
-    				checkList[this.getKey()]=true;
-    			}
-    			if (this.getKey()<0) { // added for theory
-    				negCheckList[-this.getKey()]=true;
-    			}
-    			return;
-    		}
-    		if (this.getChild()!=null) {
-    			this.getChild().heapTravel(this.getChild().getKey(), checkList, negCheckList, cnt);
-    		}
-    		if ((this.getKey()>=0)&&(checkList[this.getKey()])) {
-				return;
-			}
-    		if ((this.getKey()<0)&&(negCheckList[-this.getKey()])) {
-				return;
-			}
-    		//System.out.println(" key is " + this.getKey() + " rank is " + this.getRank());
-    		cnt+=1;
-    		if ((this.getChild()!=null)&&(this.getChild().getParent()!=this)) {
-				System.out.println("child " + this.getChild().getKey() + "not connected to parent " + this.getKey());
-			}
-			if ((this.getNext().getPrev()!=this)) {
-				System.out.println("brother " + this.getNext().getKey() + "not connected to brother " + this.getKey());
-			}
-			if ((this.getChild()!=null)&&(this.getChild().getKey()<this.getKey())) {
-				System.out.println("child " + this.getChild().getKey() + "is smaller than " + this.getKey());
-			}
-			if (this.getKey()>=0) {
-				checkList[this.getKey()]=true;
-			}
-			if (this.getKey()<0) {
-				negCheckList[-this.getKey()]=true;
-			}
-    		if (this.getParent()==null) {
-    			System.out.println("**specific tree is done, tree number is " + cnt + " **\n**tree size is " + Math.pow(2, this.getRank()) + "Root is: " + this.getKey() + "**\n");
-    			//cnt = 0;
-    		}
-    		HeapNode tmp = this;
-    		while (tmp.getNext().getKey()!=finStopper) {//I have brothers
-    			tmp.getNext().heapTravel(finStopper, checkList, negCheckList, cnt);
-    			tmp = tmp.getNext();
-    		}
-    		if ((this.getParent()==null)&&(this.getNext().getKey()!=finStopper)) {
-    			this.getNext().heapTravel(finStopper, checkList, negCheckList, cnt);
-    		}
-    		
-    		//System.out.println("");
-    		return;
-    	}
+    	
     	
     }
 }
